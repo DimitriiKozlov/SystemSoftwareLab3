@@ -2,64 +2,41 @@
 
 namespace _1SPZv1
 {
-    class Task
+    public class Task
     {
-        private bool _complited;
-        private int _workTime;
-        private int _startTick;
-        private readonly int _createTick;
-        private int _finishTick;
-        private int _leftWorkTime;
+        public bool Complited;
+        public readonly int WorkTime;
+        public int StartTick;
+        public readonly int CreateTick;
+        public int FinishTick;
+        public int LeftWorkTime;
+        public readonly int Priority;
 
         private const int MaxDuration = 20;
 
-        public Task(int createTick)
+        public Task(int createTick, int p)
         {
-            _startTick = -1;
-            _finishTick = -1;
-            _createTick = createTick;
+            StartTick = -1;
+            FinishTick = -1;
+            CreateTick = createTick;
             var rand = new Random();
 
-            _workTime = rand.Next(1, MaxDuration);
-            _leftWorkTime = _workTime;
-            _complited = false;
+            WorkTime = rand.Next(1, MaxDuration);
+            LeftWorkTime = WorkTime;
+            Complited = false;
+            Priority = p;
         }
 
         public bool Processing(int t)
         {
-            _complited = _leftWorkTime < 0;
-            if (_complited) return _complited;
-            if (_startTick == -1)
-                _startTick = t;
-            if (_leftWorkTime-- == 0)
-                _finishTick = t;
-            _complited = _leftWorkTime < 0;
-            return _complited;
-        }
-
-        public bool IsCoplited()
-        {
-            return _complited;
-        }
-
-        public int GetWorkTime()
-        {
-            return _workTime;
-        }
-
-        public int GetStartTick()
-        {
-            return _startTick;
-        }
-
-        public int GetCreateTick()
-        {
-            return _createTick;
-        }
-
-        public int GetFinishTick()
-        {
-            return _finishTick;
+            Complited = LeftWorkTime < 0;
+            if (Complited) return Complited;
+            if (StartTick == -1)
+                StartTick = t;
+            if (LeftWorkTime-- == 0)
+                FinishTick = t;
+            Complited = LeftWorkTime < 0;
+            return Complited;
         }
     }
 }

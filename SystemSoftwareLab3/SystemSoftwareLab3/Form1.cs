@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Windows.Forms;
 
 namespace _1SPZv1
@@ -8,9 +7,10 @@ namespace _1SPZv1
     public partial class Form1 : Form
     {
         readonly List<Task> _tasks = new List<Task>();
-        readonly List<int> _filo = new List<int>();
+        readonly List<List<int>> _filo = new List<List<int>>();
         int _processingTask = -1;
         int _currentTick;
+        public readonly int PrioritySizeOfQp = 10;
 
         public Form1()
         {
@@ -34,8 +34,12 @@ namespace _1SPZv1
 
             if (rand.Next(100) < Convert.ToInt32(label2.Text))
             {
-                _filo.Add(_tasks.Count);
-                _tasks.Add(new Task(_currentTick));
+                var q = new List<int>();
+                var p = rand.Next(PrioritySizeOfQp);
+                q.Add(_tasks.Count);
+                q.Add(p);
+                _filo.Add(q);
+                _tasks.Add(new Task(_currentTick, p));
             }
 
             if (_processingTask == -1)
@@ -43,8 +47,8 @@ namespace _1SPZv1
                     return;
                 else
                 {
-                    _processingTask = _filo.Last();
-                    _filo.Remove(_processingTask);
+                    _processingTask = _filo[0][0];
+                    _filo.RemoveAt(0);
                 }
 
             if (_tasks[_processingTask].Processing(_currentTick))
@@ -52,8 +56,8 @@ namespace _1SPZv1
                 _processingTask = -1;
                 if (_filo.Count != 0)
                 {
-                    _processingTask = _filo.Last();
-                    _filo.Remove(_processingTask);
+                    _processingTask = _filo[0][0];
+                    _filo.RemoveAt(0);
                 }
             }
 
@@ -68,16 +72,16 @@ namespace _1SPZv1
             listView1.Items.Clear();
             for (var i = 0; i < _tasks.Count; i++)
             {
-                waitTime += (_tasks[i].GetFinishTick() == -1)
-                    ? (_currentTick - _tasks[i].GetCreateTick())
-                    : _tasks[i].GetFinishTick() - _tasks[i].GetCreateTick() - _tasks[i].GetWorkTime();
+                waitTime += (_tasks[i].FinishTick == -1)
+                    ? (_currentTick - _tasks[i].CreateTick)
+                    : _tasks[i].FinishTick - _tasks[i].CreateTick - _tasks[i].WorkTime;
                 label9.Text = (_processingTask != -1)? _processingTask.ToString(): "*";
                 listView1.Items.Add(i.ToString());
-                listView1.Items[i].SubItems.Add(_tasks[i].GetCreateTick().ToString());
-                listView1.Items[i].SubItems.Add(_tasks[i].GetWorkTime().ToString());
-                listView1.Items[i].SubItems.Add(((_tasks[i].GetFinishTick() == -1)? (_currentTick - _tasks[i].GetCreateTick()): _tasks[i].GetFinishTick() - _tasks[i].GetCreateTick() - _tasks[i].GetWorkTime()).ToString());
-                listView1.Items[i].SubItems.Add((_tasks[i].GetFinishTick() == -1)? "Not finished yet": _tasks[i].GetFinishTick().ToString());
-                listView1.Items[i].SubItems.Add(_tasks[i].IsCoplited()? "Completed": (i == _currentTick)? "Working": "Waiting");
+                listView1.Items[i].SubItems.Add(_tasks[i].CreateTick.ToString());
+                listView1.Items[i].SubItems.Add(_tasks[i].WorkTime.ToString());
+                listView1.Items[i].SubItems.Add(((_tasks[i].FinishTick == -1)? (_currentTick - _tasks[i].CreateTick): _tasks[i].FinishTick - _tasks[i].CreateTick - _tasks[i].WorkTime).ToString());
+                listView1.Items[i].SubItems.Add((_tasks[i].FinishTick == -1)? "Not finished yet": _tasks[i].FinishTick.ToString());
+                listView1.Items[i].SubItems.Add(_tasks[i].Complited? "Completed": (i == _currentTick)? "Working": "Waiting");
                 listView1.EnsureVisible(i);
             }
             label5.Text = (_tasks.Count == 0? 0: waitTime / _tasks.Count).ToString() + @" ms";
@@ -96,6 +100,17 @@ namespace _1SPZv1
             label5.Text = @"0";
             label8.Text = @"0";
             label9.Text = @"0";
+        }
+
+        public void AddElementToPq(List<int> q)
+        {
+            for (var i = 0; i < _filo.Count; i++)
+                if (q[1] <= _filo[i][1])
+                {
+                    _filo.Insert(i, q);
+                    return;
+                }
+            _filo.Add(q);
         }
     }
 }
